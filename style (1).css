@@ -1,0 +1,79 @@
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f4f4f4;
+}
+
+.hidden {
+  display: none;
+}
+
+#app {
+  width: 90%;
+  max-width: 800px;
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+/* Onboarding Styles */
+#onboarding {
+  text-align: center;
+}
+
+#onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Dashboard Styles */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cards {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.card {
+  flex: 1;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+/* Settings */
+#settings {
+  text-align: center;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #ddd;
+}

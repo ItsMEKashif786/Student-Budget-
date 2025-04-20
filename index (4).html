@@ -1,0 +1,358 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Budget Wise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .dashboard, .profile, .transaction {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .dashboard.dark {
+            background-color: #222;
+            color: white;
+        }
+        .toggle {
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-group button.red {
+            background-color: #e74c3c;
+        }
+        .nav-bottom {
+            display: flex;
+            justify-content: space-around;
+            background-color: #333;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        .nav-bottom a {
+            color: white;
+            text-decoration: none;
+            text-align: center;
+        }
+        .nav-bottom a.active {
+            color: #e67e22;
+        }
+        .pie-chart {
+            width: 200px;
+            height: 200px;
+            background-color: #3498db;
+            border-radius: 50%;
+            margin: 20px auto;
+            position: relative;
+            text-align: center;
+            line-height: 200px;
+            color: white;
+        }
+        .success {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="#">&#x1F3E0;</a>
+        <span>studentbudgetwise.netlify.app</span>
+        <div>
+            <span id="toggle" class="toggle">&#x1F31E;</span>
+            <span>24</span>
+        </div>
+    </div>
+
+    <div class="content" id="content">
+        <div class="dashboard" id="dashboard">
+            <h2>Dashboard</h2>
+            <p>Welcome, Player war bot!</p>
+            <div class="form-group">
+                <label>Current Balance</label>
+                <input type="text" id="currentBalance" value="₹0.00" readonly>
+            </div>
+            <div class="form-group">
+                <label>Total Spend</label>
+                <input type="text" id="totalSpend" value="₹100.00" readonly>
+            </div>
+            <div class="form-group">
+                <label>Total Credit</label>
+                <input type="text" id="totalCredit" value="₹0.00" readonly>
+            </div>
+            <div class="form-group">
+                <label>Budget Status</label>
+                <input type="text" id="budgetStatus" value="0.00% of your budget remaining" readonly>
+            </div>
+        </div>
+
+        <div class="profile" id="profile" style="display: none;">
+            <h2>User Profile</h2>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="name" value="Player war bot" readonly>
+            </div>
+            <div class="form-group">
+                <label>Monthly Budget</label>
+                <input type="text" id="monthlyBudget" value="100">
+            </div>
+            <div class="form-group">
+                <label>School/College Name</label>
+                <input type="text" id="school" value="Wv w">
+            </div>
+            <div class="form-group">
+                <label>UPI ID</label>
+                <input type="text" id="upi" placeholder="Enter your UPI ID">
+            </div>
+            <button onclick="updateProfile()">Update Profile</button>
+        </div>
+
+        <div class="transaction" id="transaction" style="display: none;">
+            <h2>Add Transaction</h2>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="type">
+                    <option value="Gave">Gave</option>
+                    <option value="Received">Received</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="category">
+                    <option value="Food">Food</option>
+                    <option value="Travel">Travel</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="amount" value="0">
+            </div>
+            <div class="form-group">
+                <label>Notes (optional)</label>
+                <input type="text" id="notes" placeholder="Enter notes">
+            </div>
+            <button onclick="addTransaction()">Add Transaction</button>
+            <div id="success" class="success" style="display: none;">Transaction added successfully</div>
+            <div class="form-group">
+                <h3>Transaction History</h3>
+                <div id="transactionHistory"></div>
+                <button class="red" onclick="resetData()">Reset All Data</button>
+            </div>
+        </div>
+
+        <div class="transaction" id="personTransaction" style="display: none;">
+            <h2>Person-to-Person Transactions</h2>
+            <div class="form-group">
+                <label>Person Name</label>
+                <input type="text" id="personName" placeholder="Enter person name">
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="personType">
+                    <option value="Gave">Gave</option>
+                    <option value="Received">Received</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="personAmount" value="0">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" id="personNotes" placeholder="Enter notes">
+            </div>
+            <button onclick="addPersonTransaction()">Add Transaction</button>
+            <div class="form-group">
+                <h3>Transaction Summary</h3>
+                <p>Total Amount You Gave: <span id="totalGave">₹0.00</span></p>
+                <p>Total Amount You Received: <span id="totalReceived">₹0.00</span></p>
+                <p>Balance: <span id="balance">₹0.00</span></p>
+            </div>
+            <div class="form-group">
+                <h3>Transactions</h3>
+                <div id="personTransactionHistory"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bottom">
+        <a href="#" onclick="showSection('dashboard')" class="active">Dashboard</a>
+        <a href="#" onclick="showSection('profile')">Profile</a>
+        <a href="#" onclick="showSection('transaction')">Udhhar</a>
+    </div>
+
+    <script>
+        let transactions = [];
+        let personTransactions = [];
+
+        function showSection(section) {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('profile').style.display = 'none';
+            document.getElementById('transaction').style.display = 'none';
+            document.getElementById('personTransaction').style.display = 'none';
+            document.getElementById(section).style.display = 'block';
+            document.querySelectorAll('.nav-bottom a').forEach(a => a.classList.remove('active'));
+            document.querySelector(`.nav-bottom a[onclick="showSection('${section}')"]`).classList.add('active');
+        }
+
+        function toggleDarkMode() {
+            const dashboard = document.getElementById('dashboard');
+            dashboard.classList.toggle('dark');
+        }
+
+        document.getElementById('toggle').addEventListener('click', toggleDarkMode);
+
+        function updateProfile() {
+            alert('Profile updated!');
+        }
+
+        function addTransaction() {
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const notes = document.getElementById('notes').value || 'No notes';
+            const date = new Date().toLocaleDateString();
+
+            transactions.push({ type, category, amount, notes, date });
+            updateDashboard();
+            document.getElementById('success').style.display = 'block';
+            setTimeout(() => document.getElementById('success').style.display = 'none', 2000);
+            document.getElementById('amount').value = 0;
+            document.getElementById('notes').value = '';
+        }
+
+        function addPersonTransaction() {
+            const personName = document.getElementById('personName').value;
+            const personType = document.getElementById('personType').value;
+            const personAmount = parseFloat(document.getElementById('personAmount').value);
+            const personNotes = document.getElementById('personNotes').value || 'No notes';
+
+            personTransactions.push({ personName, personType, personAmount, personNotes });
+            updatePersonTransactionSummary();
+            document.getElementById('success').style.display = 'block';
+            setTimeout(() => document.getElementById('success').style.display = 'none', 2000);
+            document.getElementById('personName').value = '';
+            document.getElementById('personAmount').value = 0;
+            document.getElementById('personNotes').value = '';
+        }
+
+        function updateDashboard() {
+            const totalSpend = transactions.reduce((sum, t) => t.type === 'Gave' ? sum + t.amount : sum, 0);
+            document.getElementById('totalSpend').value = `₹${totalSpend.toFixed(2)}`;
+            document.getElementById('currentBalance').value = `₹${(100 - totalSpend).toFixed(2)}`;
+            document.getElementById('budgetStatus').value = `${((100 - totalSpend) / 100 * 100).toFixed(2)}% of your budget remaining`;
+            const history = document.getElementById('transactionHistory');
+            history.innerHTML = transactions.map(t => `- ₹${t.amount.toFixed(2)} (${t.category}) - ${t.date} <button onclick="deleteTransaction('${t.date}')">Delete</button>`).join('<br>');
+        }
+
+        function updatePersonTransactionSummary() {
+            const totalGave = personTransactions.filter(t => t.personType === 'Gave').reduce((sum, t) => sum + t.personAmount, 0);
+            const totalReceived = personTransactions.filter(t => t.personType === 'Received').reduce((sum, t) => sum + t.personAmount, 0);
+            document.getElementById('totalGave').textContent = `₹${totalGave.toFixed(2)}`;
+            document.getElementById('totalReceived').textContent = `₹${totalReceived.toFixed(2)}`;
+            document.getElementById('balance').textContent = `₹${(totalReceived - totalGave).toFixed(2)}`;
+            const history = document.getElementById('personTransactionHistory');
+            history.innerHTML = personTransactions.map(t => `Person Name: ${t.personName}<br>Type: ${t.personType}<br>Amount: ₹${t.personAmount}<br>Notes: ${t.personNotes}<br>`).join('<hr>');
+        }
+
+        function deleteTransaction(date) {
+            transactions = transactions.filter(t => t.date !== date);
+            updateDashboard();
+        }
+
+        function resetData() {
+            transactions = [];
+            updateDashboard();
+        }
+
+        // Initial call to set up dashboard
+        updateDashboard();
+    </script>
